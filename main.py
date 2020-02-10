@@ -10,11 +10,23 @@ import datetime
 import logging
 
 logging.basicConfig(
-    format="%(asctime)s : %(levelname)s : %(name)s : %(message)s", level=logging.INFO)
+    format="%(asctime)s : %(levelname)s : %(name)s : %(message)s", level=logging.INFO
+)
 logging = logging.getLogger(__name__)
 
+raw_schema = {
+        "type": "record",
+        "namespace": "AvroPubSubDemo",
+        "name": "Entity",
+        "fields": [
+            {"name": "id", "type": "string"},
+            {"name": "name", "type": "string"},
+            {"name": "dob", "type": "string"},
+        ],
+    }
+    
 
-class avroReadWrite():
+class avroReadWrite:
     def __init__(self, schema):
         self.schema = schema
 
@@ -33,13 +45,9 @@ class avroReadWrite():
 class JobOptions(PipelineOptions):
     @classmethod
     def _add_argparse_args(cls, parser):
-        parser.add_value_provider_argument(
-            "--input", default="", help="pubsub input topic"
-        )
-        parser.add_value_provider_argument(
-            "--output", default="", help="pubsub outut topic"
-        )
-
+        parser.add_argument("--input", required=True, help="pubsub input topic")
+        parser.add_argument("--output", required=True, help="pubsub outut topic")
+        
 
 class TransformerDoFn(beam.DoFn):
     def __init__(self, _schema):
@@ -51,8 +59,8 @@ class TransformerDoFn(beam.DoFn):
             logging.info("Input Record: {}".format(record))
             record["dob"] = str(
                 datetime.datetime.strptime(record["dob"], "%d/%m/%Y").date()
-            ) 
-            logging.info("Output Record: {}", format(record))
+            )
+            logging.info("Output Record: {}".format(record))
             logging.info("-----------------------------------------------------------")
             return [record]
         except Exception as e:
@@ -67,23 +75,14 @@ def run(argv=None, save_main_session=True):
     pipeline_options = PipelineOptions(pipeline_args)
     pipeline_options.view_as(SetupOptions).save_main_session = save_main_session
     job_options = pipeline_options.view_as(JobOptions)
-    
+
     p = beam.Pipeline(options=pipeline_options)
 
-    raw_schema = {
-        "type": "record",
-        "namespace": "AvroPubSubDemo",
-        "name": "Entity",
-        "fields": [
-            {"name": "id", "type": "string"},
-            {"name": "name", "type": "string"},
-            {"name": "dob", "type": "string"},
-        ],
-    }
+    
     schema = parse_schema(raw_schema)
 
     logging.info("-----------------------------------------------------------")
-    logging.info("             Dataflow Streaming with Pub/Sub               ")
+    logging.info("          Dataflow AVRO Streaming with Pub/Sub             ")
     logging.info("-----------------------------------------------------------")
 
     avroRW = avroReadWrite(schema)
