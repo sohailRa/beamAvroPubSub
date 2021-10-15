@@ -1,4 +1,4 @@
-# beamAvroPubSub
+# beamAvroPubSub - test
 This project demonstrated a simple Python Beam Streaming Pipeline for AVRO records. Details on the project can be found on the Medium Post "Apache Beam: AVRO streaming using Pub/Sub in Python".
 
 The project uses Google Pub/Sub emulator with slight modification in the "cloud-client" library. The emulator can be started along with the required topic names and subscriptions by invoking the right scripts from the bin directory.
